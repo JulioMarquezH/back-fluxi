@@ -22,25 +22,54 @@ exports.getProducts = async (req, res) => {
     }
 };
 
-exports.putProductById = async (req, res) => {
+
+exports.updateProduct = async (req, res) => {
     try {
         const id = req.query.id;
-        const data = req.body;
-        const product = await Products.findById(id);
-
-        if (!product) {
-            return res.status(404).json({ status: 404, message: 'Product not found', data: {} });
+        const productsData = req.body;
+    
+        if (!id || !productsData) {
+            return res.status(400).json({ message: 'ID and update data are required' });
         }
 
-        product.name = data.name;
-        console.log('Producto antes de guardar:', product);
-        console.log('el nombre:', product.name);
+        const product = await Products.findById({ _id: id });
+        if (!product) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+    
+        Object.keys(productsData).forEach((key) => {
+            product[key] = productsData[key];
+        });
 
-        console.log(await product.save());
+        const updatedProduct = await product.save();
 
-        return res.status(200).json({ status: 200, message: 'Success', data: product });
+        return res.json(updatedProduct);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching product', error: error.message });
+    
+        return res.status(500).json({
+            message: 'Error updating order',
+            error: error.message,
+        });
     }
 };
 
+exports.createProduct = async (req, res) => {
+    try {
+        const productData = req.body;
+
+        if (!productData || Object.keys(productData).length === 0) {
+            return res.status(400).json({ message: 'Order data is required' });
+        }
+
+        const newProductData = new Products(productData);
+
+        const savedProduct = await newProductData.save();
+
+        return res.status(201).json(savedProduct);
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Error creating order',
+            error: error.message,
+        });
+    }
+};

@@ -20,37 +20,50 @@ exports.getOrders = async (req, res) => {
 exports.updateOrders = async (req, res) => {
     try {
         const id = req.query.id;
-        const OrdersData = req.body;
-        const _id = id
-        console.log(OrdersData)
-
-
-        if (!id || !OrdersData) {
+        const ordersData = req.body;
+    
+        if (!id || !ordersData) {
             return res.status(400).json({ message: 'ID and update data are required' });
         }
 
-        // const filter = { _id: id };
-        // const updatedOrders = await Orders.find(filter).limit(1);
+        const order = await Orders.findById({ _id: id });
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+    
+        Object.keys(ordersData).forEach((key) => {
+            order[key] = ordersData[key];
+        });
 
-        // Orders.updateOne({_id}, OrdersData);
+        const updatedOrder = await order.save();
 
-        // updatedOrders.product_name = OrdersData.product_name;
-        // await updatedOrders.save();
-
-        // const filter = { _id: id };
-        // const orders = await Orders.find(filter).limit(10);
-        // console.log(orders)
-        // return
-        const updatedOrders = await Orders.findByIdAndUpdate({ _id }, { ...OrdersData }, { upsert: true, new: true });
-        // const updatedOrders = await Orders.findOneAndUpdate({ _id }, OrdersData);
-
-        // const updatedOrders = await Orders.findOneAndUpdate({ _id }, OrdersData, { upsert: true, new: true });
-
-
-
-
-        return res.json(updatedOrders);
+        return res.json(updatedOrder);
     } catch (error) {
-        return res.status(500).json({ message: 'Error updating user', error: error.message });
+    
+        return res.status(500).json({
+            message: 'Error updating order',
+            error: error.message,
+        });
+    }
+};
+
+exports.createOrder = async (req, res) => {
+    try {
+        const orderData = req.body;
+
+        if (!orderData || Object.keys(orderData).length === 0) {
+            return res.status(400).json({ message: 'Order data is required' });
+        }
+
+        const newOrder = new Orders(orderData);
+
+        const savedOrder = await newOrder.save();
+
+        return res.status(201).json(savedOrder);
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Error creating order',
+            error: error.message,
+        });
     }
 };
