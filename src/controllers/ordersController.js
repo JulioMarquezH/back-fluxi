@@ -67,3 +67,27 @@ exports.createOrder = async (req, res) => {
         });
     }
 };
+
+exports.deleteOrder = async (req, res) => {
+    try {
+        const orderId = req.query.id;
+
+        if (!orderId) {
+            return res.status(400).json({ message: 'Order ID is required' });
+        }
+
+        const deletedOrder = await Orders.findByIdAndDelete(orderId);
+
+        if (!deletedOrder) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        return res.status(200).json({ message: 'Order deleted successfully', deletedOrder });
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Error deleting order',
+            error: error.message,
+        });
+    }
+};
+
